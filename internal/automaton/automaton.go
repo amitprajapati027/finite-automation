@@ -1,8 +1,9 @@
-package internal
+package automaton
 
 import (
 	"fmt"
 
+	"github.com/amitprajapati027/finite-automation/internal/validation"
 	"github.com/amitprajapati027/finite-automation/transition"
 )
 
@@ -11,18 +12,22 @@ type FiniteAutomation struct {
 	// States contains a set of all states.
 	States States
 
-	// Sigma is the input to FSA.
-	Sigma []string
+	// TransitionInputs contains all valid inputs to FSA.
+	TransitionInputs []string
 
-	// Q0 is the initial state.
-	Q0 *State
+	// InitialState is the initial state.
+	InitialState *State
 }
 
 // Execute runs the automation.
-func (fa *FiniteAutomation) Execute() (string, error) {
-	state := fa.Q0
-	var err error
-	for _, s := range fa.Sigma {
+func (fa *FiniteAutomation) Execute(Sigma ...string) (string, error) {
+	err := validation.ValidateInputs(Sigma, fa.TransitionInputs)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute finite automation: %w", err)
+	}
+
+	state := fa.InitialState
+	for _, s := range Sigma {
 		state, err = state.Transition(s)
 		if err != nil {
 			return "", fmt.Errorf("error executing automation: %w", err)
@@ -38,7 +43,7 @@ func (fa *FiniteAutomation) Execute() (string, error) {
 }
 
 // NewFiniteAutomation creates a new FiniteAutomation object.
-func NewFiniteAutomation(Q []string, Sigma []string, q0 string, F []string, Delta []transition.Transition) (*FiniteAutomation, error) {
+func NewFiniteAutomation(Q []string, q0 string, F []string, Delta transition.Transitions) (*FiniteAutomation, error) {
 	// Create states.
 	states := make(States, len(Q))
 	for i, q := range Q {
@@ -48,7 +53,7 @@ func NewFiniteAutomation(Q []string, Sigma []string, q0 string, F []string, Delt
 	// Set final states.
 	err := states.SetFinalStates(F)
 	if err != nil {
-		return nil, fmt.Errorf("error setting F: %w", err)
+		return nil, fmt.Errorf("error setting final states: %w", err)
 	}
 
 	// Set deltas.
@@ -59,12 +64,12 @@ func NewFiniteAutomation(Q []string, Sigma []string, q0 string, F []string, Delt
 	// Get the initial state.
 	initialState, err := states.Find(q0)
 	if err != nil {
-		return nil, fmt.Errorf("error setting q0: %w", err)
+		return nil, fmt.Errorf("error setting initial state: %w", err)
 	}
 
 	return &FiniteAutomation{
-		States: states,
-		Sigma:  Sigma,
-		Q0:     initialState,
+		States:           states,
+		TransitionInputs: Delta.GetInputs(),
+		InitialState:     initialState,
 	}, nil
 }

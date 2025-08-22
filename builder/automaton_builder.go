@@ -6,9 +6,6 @@ import (
 	"github.com/amitprajapati027/finite-automation/transition"
 )
 
-// FiniteAutomation describes a finite automation.
-type FiniteAutomation = automaton.FiniteAutomation
-
 // AutomatonBuilder provides an interface for constructing finite automata.
 type AutomatonBuilder struct {
 	states       []string
@@ -79,7 +76,7 @@ func (b *AutomatonBuilder) Reset() *AutomatonBuilder {
 }
 
 // Build constructs and returns the finite automaton.
-func (b *AutomatonBuilder) Build() (*FiniteAutomation, error) {
+func (b *AutomatonBuilder) Build() (*automaton.FiniteAutomation, error) {
 	// Validate before building
 	err := b.Validate()
 	if err != nil {
